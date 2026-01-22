@@ -17,7 +17,7 @@ class Core(implicit val config:Configs) extends Module{
   val ARCHID = config.ARCHID
 
   val io = IO(new Bundle {
-    val pin: UInt = Output(config.XLEN.W)
+    val pin: UInt = Output(UInt(XLEN.W))
     val stall: Bool = Input(Bool())
 
     val dmemReq = Decoupled(new MemRequestIO)
@@ -35,10 +35,10 @@ class Core(implicit val config:Configs) extends Module{
   val if_reg_ins = RegInit(0.U(32.W))
 
   // ID-EX Registers
-  val id_reg_pc = RegInit(0.U(32.W))
-  val id_reg_rd1 = RegInit(0.U(32.W))
-  val id_reg_rd2 = RegInit(0.U(32.W))
-  val id_reg_imm = RegInit(0.U(32.W))
+  val id_reg_pc = RegInit(0.U(XLEN.W))
+  val id_reg_rd1 = RegInit(0.U(XLEN.W))
+  val id_reg_rd2 = RegInit(0.U(XLEN.W))
+  val id_reg_imm = RegInit(0.U(XLEN.W))
   val id_reg_wra = RegInit(0.U(5.W))
   val id_reg_f7 = RegInit(0.U(7.W))
   val id_reg_f3 = RegInit(0.U(3.W))
@@ -67,10 +67,10 @@ class Core(implicit val config:Configs) extends Module{
   val id_reg_amoOp = RegInit(0.U(5.W))
 
   // EX-MEM Registers
-  val ex_reg_branch = RegInit(0.U(32.W))
-  val ex_reg_zero = RegInit(0.U(32.W))
-  val ex_reg_result = RegInit(0.U(32.W))
-  val ex_reg_wd = RegInit(0.U(32.W))
+  val ex_reg_branch = RegInit(0.U(XLEN.W))
+  val ex_reg_zero = RegInit(0.U(XLEN.W))
+  val ex_reg_result = RegInit(0.U(XLEN.W))
+  val ex_reg_wd = RegInit(0.U(XLEN.W))
   val ex_reg_wra = RegInit(0.U(5.W))
   val ex_reg_ins = RegInit(0.U(32.W))
   val ex_reg_ctl_memToReg = RegInit(0.U(2.W))
@@ -78,7 +78,7 @@ class Core(implicit val config:Configs) extends Module{
   val ex_reg_ctl_memRead = RegInit(false.B)
   val ex_reg_ctl_memWrite = RegInit(false.B)
   val ex_reg_ctl_branch_taken = RegInit(false.B)
-  val ex_reg_pc = RegInit(0.U(32.W))
+  val ex_reg_pc = RegInit(0.U(XLEN.W))
   val ex_reg_is_csr = RegInit(false.B)
   val ex_reg_csr_data = RegInit(0.U)
 
@@ -93,14 +93,14 @@ class Core(implicit val config:Configs) extends Module{
   val ex_reg_amoOp  = RegInit(0.U(5.W))
   
   // MEM-WB Registers
-  val mem_reg_rd = RegInit(0.U(32.W))
+  val mem_reg_rd = RegInit(0.U(XLEN.W))
   val mem_reg_ins = RegInit(0.U(32.W))
-  val mem_reg_result = RegInit(0.U(32.W))
-  val mem_reg_branch = RegInit(0.U(32.W))
+  val mem_reg_result = RegInit(0.U(XLEN.W))
+  val mem_reg_branch = RegInit(0.U(XLEN.W))
   val mem_reg_wra = RegInit(0.U(5.W))
   val mem_reg_ctl_memToReg = RegInit(0.U(2.W))
   val mem_reg_ctl_regWrite = RegInit(VecInit(Vector.fill(if (F) 2 else 1)(0.B)))
-  val mem_reg_pc = RegInit(0.U(32.W))
+  val mem_reg_pc = RegInit(0.U(XLEN.W))
   val mem_reg_is_csr = RegInit(false.B)
   val mem_reg_csr_data = RegInit(0.U)
 
@@ -119,9 +119,9 @@ class Core(implicit val config:Configs) extends Module{
   val sc_issued = RegInit(false.B)
 
   //Pipeline Units
-  val IF = Module(new InstructionFetch).io
-  val ID = Module(new InstructionDecode(F, Zicsr, TRACE)).io
-  val EX = Module(new Execute(F, M = M, TRACE = TRACE)).io
+  val IF = Module(new InstructionFetch(XLEN)).io
+  val ID = Module(new InstructionDecode(F, Zicsr, TRACE, XLEN)).io
+  val EX = Module(new Execute(F, M = M, TRACE = TRACE, XLEN = XLEN)).io
   val MEM = Module(new MemoryFetch(TRACE))
 
   val reservationFile = Module(new ReservationFile).io
@@ -130,7 +130,7 @@ class Core(implicit val config:Configs) extends Module{
    * Fetch Stage *
    ******************/
 
-  val pc = Module(new PC)
+  val pc = Module(new PC(XLEN))
 
   io.imemReq <> IF.coreInstrReq
   IF.coreInstrResp <> io.imemRsp
@@ -444,7 +444,7 @@ class Core(implicit val config:Configs) extends Module{
    * Write Back Stage *
    ********************/
 
-  val wb_data = dontTouch(Wire(UInt(32.W)))
+  val wb_data = dontTouch(Wire(UInt(XLEN.W)))
   val wb_addr = Wire(UInt(5.W))
 
   when(mem_reg_ctl_memToReg === 1.U) {

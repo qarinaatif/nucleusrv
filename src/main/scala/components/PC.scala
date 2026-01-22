@@ -7,7 +7,7 @@ class PC(XLEN: Int) extends Module{
     val halt = Input(Bool())
     val out = Output(SInt(XLEN.W))
     val pc4 = Output(SInt(XLEN.W))
-    val pc2 = Output(SInt(32.W))
+    val pc2 = Output(SInt(XLEN.W))
   })
 
   val pc_reg = RegInit((0x0-0x4).asSInt(XLEN.W))

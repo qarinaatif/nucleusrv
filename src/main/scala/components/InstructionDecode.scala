@@ -16,7 +16,7 @@ class InstructionDecode(
     val pcAddress = Input(UInt(XLEN.W))
     val ctl_writeEnable = Input(Vec(if (F) 2 else 1, Bool()))
     val id_ex_mem_read = Input(Bool())
-//    val ex_mem_mem_write = Input(Bool())
+//  val ex_mem_mem_write = Input(Bool())
     val ex_mem_mem_read = Input(Bool())
     val dmem_resp_valid = Input(Bool())
     val id_ex_rd = Input(UInt(5.W))
@@ -85,7 +85,7 @@ class InstructionDecode(
 
     // RVFI pins
     val raddr = if (TRACE) Some(Output(Vec(3, UInt(5.W)))) else None
-    val rd_wdata = if (TRACE) Some(Output(UInt(32.W))) else None
+    val rd_wdata = if (TRACE) Some(Output(UInt(XLEN.W))) else None
 
     // Atomic Outputpins
     val isAMO  = Output(Bool())
@@ -208,7 +208,7 @@ class InstructionDecode(
   }
 
   //Register File
-  val registers = Module(new Registers(F))
+  val registers = Module(new Registers(F, XLEN))
   val registerRd = io.writeReg
   val registerRs1 = dontTouch(io.id_instruction(19, 15))
   val registerRs2 = io.id_instruction(24, 20)
@@ -284,7 +284,7 @@ class InstructionDecode(
   }
   
 
-  val immediate = Module(new ImmediateGen(F))
+  val immediate = Module(new ImmediateGen(F, XLEN))
   immediate.io.instruction := io.id_instruction
   io.immediate := immediate.io.out
 

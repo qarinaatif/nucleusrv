@@ -7,17 +7,18 @@ import FBitPats._
 class Execute(
   F: Boolean,
   M: Boolean = false,
-  TRACE: Boolean
+  TRACE: Boolean,
+  XLEN: Int
 ) extends Module {
   val io = IO(new Bundle {
-    val immediate = Input(UInt(32.W))
-    val readData1 = Input(UInt(32.W))
-    val readData2 = Input(UInt(32.W))
-    val pcAddress = Input(UInt(32.W))
+    val immediate = Input(UInt(XLEN.W))
+    val readData1 = Input(UInt(XLEN.W))
+    val readData2 = Input(UInt(XLEN.W))
+    val pcAddress = Input(UInt(XLEN.W))
     val func7 = Input(UInt(7.W))
     val func3 = Input(UInt(3.W))
-    val mem_result = Input(UInt(32.W))
-    val wb_result = Input(UInt(32.W))
+    val mem_result = Input(UInt(XLEN.W))
+    val wb_result = Input(UInt(XLEN.W))
 
     val ex_mem_regWrite = Input(Vec(if (F) 2 else 1, Bool()))
     val mem_wb_regWrite = Input(Vec(if (F) 2 else 1, Bool()))
@@ -34,12 +35,12 @@ class Execute(
     val isLR = Input(Bool())
     val isSC = Input(Bool())
 
-    val writeData = Output(UInt(32.W))
-    val ALUresult = Output(UInt(32.W))
+    val writeData = Output(UInt(XLEN.W))
+    val ALUresult = Output(UInt(XLEN.W))
 
     val stall = Output(Bool())
 
-    val rs1_rdata = if (TRACE) Some(Output(UInt(32.W))) else None
+    val rs1_rdata = if (TRACE) Some(Output(UInt(XLEN.W))) else None
 
     val f_read = if (F) Some(Input(Vec(3, Bool()))) else None
     val readData3 = if (F) Some(Input(UInt(32.W))) else None

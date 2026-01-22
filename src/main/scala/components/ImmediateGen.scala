@@ -3,10 +3,13 @@ import chisel3._
 import chisel3.util._
 import nucleusrv.components.FP_OP._
 
-class ImmediateGen(F: Boolean) extends Module {
+class ImmediateGen(
+  F: Boolean,
+  XLEN: Int) 
+  extends Module {
   val io = IO(new Bundle {
     val instruction = Input(UInt(32.W))
-    val out = Output(UInt(32.W))
+    val out = Output(UInt(XLEN.W))
   })
   val opcode = io.instruction(6, 0)
 
