@@ -3,9 +3,9 @@ import chisel3._
 import chisel3.util._ 
 
 
-class InstructionFetch extends Module {
+class InstructionFetch(XLEN: Int) extends Module {
   val io = IO(new Bundle {
-    val address: UInt = Input(UInt(32.W))
+    val address: UInt = Input(UInt(XLEN.W))
     val instruction: UInt = Output(UInt(32.W))
     val stall: Bool = Input(Bool())
     val coreInstrReq = Decoupled(new MemRequestIO)

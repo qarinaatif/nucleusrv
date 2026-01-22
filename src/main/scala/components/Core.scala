@@ -17,7 +17,7 @@ class Core(implicit val config:Configs) extends Module{
   val ARCHID = config.ARCHID
 
   val io = IO(new Bundle {
-    val pin: UInt = Output(UInt(32.W))
+    val pin: UInt = Output(config.XLEN.W)
     val stall: Bool = Input(Bool())
 
     val dmemReq = Decoupled(new MemRequestIO)

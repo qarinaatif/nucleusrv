@@ -6,13 +6,14 @@ import chisel3.util._
 class InstructionDecode(
   F: Boolean,
   Zicsr: Boolean,
-  TRACE: Boolean
+  TRACE: Boolean,
+  XLEN: Int
 ) extends Module {
   val io = IO(new Bundle {
     val id_instruction = Input(UInt(32.W))
-    val writeData = Input(UInt(32.W))
+    val writeData = Input(UInt(XLEN.W))
     val writeReg = Input(UInt(5.W))
-    val pcAddress = Input(UInt(32.W))
+    val pcAddress = Input(UInt(XLEN.W))
     val ctl_writeEnable = Input(Vec(if (F) 2 else 1, Bool()))
     val id_ex_mem_read = Input(Bool())
 //    val ex_mem_mem_write = Input(Bool())
@@ -25,27 +26,27 @@ class InstructionDecode(
     val ex_mem_ins = Input(UInt(32.W))
     val mem_wb_ins = Input(UInt(32.W))
     val ex_ins = Input(UInt(32.W))
-    val ex_result = Input(UInt(32.W))
-    val ex_mem_result = Input(UInt(32.W))
-    val mem_wb_result = Input(UInt(32.W))
+    val ex_result = Input(UInt(XLEN.W))
+    val ex_mem_result = Input(UInt(XLEN.W))
+    val mem_wb_result = Input(UInt(XLEN.W))
 
     val id_ex_regWr = Input(Bool())
     val ex_mem_regWr = Input(Bool())
     val csr_Ex = Input(Bool())
     val csr_Mem = Input(Bool())
     val csr_Wb = Input(Bool())
-    val csr_Ex_data = Input(UInt(32.W))
-    val csr_Mem_data = Input(UInt(32.W))
-    val csr_Wb_data = Input(UInt(32.W))
-    val dmem_data = Input(UInt(32.W))
+    val csr_Ex_data = Input(UInt(XLEN.W))
+    val csr_Mem_data = Input(UInt(XLEN.W))
+    val csr_Wb_data = Input(UInt(XLEN.W))
+    val dmem_data = Input(UInt(XLEN.W))
 
     val ex_stall = Input(Bool())
 
     //Outputs
     val immediate = Output(UInt(32.W))
     val writeRegAddress = Output(UInt(5.W))
-    val readData1 = Output(UInt(32.W))
-    val readData2 = Output(UInt(32.W))
+    val readData1 = Output(UInt(XLEN.W))
+    val readData2 = Output(UInt(XLEN.W))
     val func7 = Output(UInt(7.W))
     val func3 = Output(UInt(3.W))
     val ctl_aluSrc = Output(Bool())
@@ -60,7 +61,7 @@ class InstructionDecode(
     val hdu_pcWrite = Output(Bool())
     val hdu_if_reg_write = Output(Bool())
     val pcSrc = Output(Bool())
-    val pcPlusOffset = Output(UInt(32.W))
+    val pcPlusOffset = Output(UInt(XLEN.W))
     val ifid_flush = Output(Bool())
 
     val stall = Output(Bool())
@@ -212,8 +213,8 @@ class InstructionDecode(
   val registerRs1 = dontTouch(io.id_instruction(19, 15))
   val registerRs2 = io.id_instruction(24, 20)
   val registerRs3 = if (F) Some(io.id_instruction(31, 27)) else None
-  val readData1 = WireInit(0.U(32.W))
-  val readData2 = WireInit(0.U(32.W))
+  val readData1 = WireInit(0.U(UInt(XLEN.W)))
+  val readData2 = WireInit(0.U(UInt(XLEN.W)))
   val writeData = dontTouch(Mux(io.csr_Wb, io.csr_Wb_data, io.writeData))
   registers.io.readAddress(0) := registerRs1
   registers.io.readAddress(1) := registerRs2
@@ -288,8 +289,8 @@ class InstructionDecode(
   io.immediate := immediate.io.out
 
   // Branch Forwarding
-  val input1 = Wire(UInt(32.W))
-  val input2 = Wire(UInt(32.W))
+  val input1 = Wire(UInt(XLEN.W))
+  val input2 = Wire(UInt(XLEN.W))
 
   when (
     (registerRs1 === io.ex_mem_ins(11, 7))
@@ -328,7 +329,7 @@ class InstructionDecode(
   hdu.io.taken := bu.io.taken  
 
   //Forwarding for Jump
-  val j_offset = Wire(UInt(32.W))
+  val j_offset = Wire(UInt(XLEN.W))
   when(
     (registerRs1 === io.ex_ins(11, 7))
     && (if (F) !io.f_read_reg.get(0)(0) else 1.B)
