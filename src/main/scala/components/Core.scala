@@ -31,7 +31,7 @@ class Core(implicit val config:Configs) extends Module{
   })
 
   // IF-ID Registers
-  val if_reg_pc = RegInit(0.U(32.W))
+  val if_reg_pc = RegInit(0.U(XLEN.W))
   val if_reg_ins = RegInit(0.U(32.W))
 
   // ID-EX Registers
@@ -215,8 +215,13 @@ class Core(implicit val config:Configs) extends Module{
     id_reg_ctl_aluOp := ID.ctl_aluOp
     id_reg_ctl_jump := ID.ctl_jump
     id_reg_ctl_aluSrc1 := ID.ctl_aluSrc1
-    id_reg_is_csr := ID.is_csr.get
-    id_reg_csr_data := ID.csr_o_data.get
+    if (Zicsr) {
+      id_reg_is_csr := ID.is_csr.get
+      id_reg_csr_data := ID.csr_o_data.get
+    } else {
+      id_reg_is_csr := false.B
+      id_reg_csr_data := 0.U
+    }
     
     id_reg_isAMO := ID.isAMO
     id_reg_isLR  := ID.isLR
@@ -235,9 +240,11 @@ class Core(implicit val config:Configs) extends Module{
   val misa = (1 << 30).U | (1 << 8).U | 
               Mux(M.B, (1 << 12).U, 0.U) | 
               Mux(C.B, (1 << 2).U, 0.U)
-  ID.csr_i_misa.get    := misa
-  ID.csr_i_marchid.get := ARCHID.U
-  ID.csr_i_mhartid.get := HARTID.U
+  if (Zicsr) {
+    ID.csr_i_misa.get    := misa
+    ID.csr_i_marchid.get := ARCHID.U
+    ID.csr_i_mhartid.get := HARTID.U
+  }
   ID.id_ex_regWr := id_reg_ctl_regWrite(0)
   ID.ex_mem_regWr := ex_reg_ctl_regWrite(0)
 
@@ -486,7 +493,9 @@ class Core(implicit val config:Configs) extends Module{
     *****************************/
     val instruction_retired = WireInit(false.B)
     instruction_retired := mem_reg_ins =/= 0.U && !ID.ifid_flush && !(MEM.io.stall || io.stall) && (!mem_reg_ctl_memToReg === 1.U || io.dmemRsp.valid)
-    ID.csr_i_instr_retired.get := instruction_retired
+    if (Zicsr) {
+      ID.csr_i_instr_retired.get := instruction_retired
+    }
 
   /**************
   ** RVFI PINS **

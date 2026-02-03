@@ -61,6 +61,30 @@ class Control(F: Boolean) extends Module {
         2.U, // aluOp
         0.U
       ),
+      // RW-Type
+      BitPat("b?????????????????????????0111011") -> List(
+        true.B, // aluSrc
+        0.U, // memToReg
+        true.B, // regWrite
+        false.B, // memRead
+        false.B, // memWrite
+        false.B, // branch
+        0.U, // jump
+        3.U, // aluOp
+        0.U // aluSrc1
+      ),
+      // IW-Type
+      BitPat("b?????????????????????????0011011") -> List(
+        false.B, // aluSrc
+        0.U, // memToReg
+        true.B, // regWrite
+        false.B, // memRead
+        false.B, // memWrite
+        false.B, // branch
+        0.U, // jump
+        3.U, // aluOp
+        0.U
+      ),
       // CSR
       BitPat("b?????????????????????????1110011") -> List(
         false.B, // aluSrc
@@ -270,7 +294,7 @@ class Control(F: Boolean) extends Module {
           0.U // aluSrc1
         )
       ) else Array()
-    )
+    ) 
   )
   io.aluSrc := signals(0)
   io.memToReg := signals(1)

@@ -55,7 +55,7 @@ class Execute(
     val amo_result  = Output(UInt(32.W))
   })
 
-  val alu = Module(new ALU)
+  val alu = Module(new ALU(XLEN))
   val aluCtl = Module(new AluControl)
   
   val amoAlu = Module(new AMOALU)

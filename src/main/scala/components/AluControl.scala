@@ -34,6 +34,28 @@ class AluControl extends Module {
     io.out := 2.U
   }.elsewhen(io.aluOp === 1.U) {
     io.out := 15.U
+  }.elsewhen(io.aluOp === 3.U) {
+    switch(io.f3) {
+      is(0.U) {
+        when(io.f7 === 0.U) {
+          io.out := 10.U
+        } //addw
+          .otherwise {
+            io.out := 11.U
+          } // subw
+      }
+      is(1.U) {
+        io.out := 12.U
+      } // sllw
+      is(5.U) {
+        when(io.f7 === 0.U) {
+          io.out := 13.U
+      } // srlw
+        .otherwise{
+          io.out := 14.U
+        } //sraw
+      }
+    }
   }.otherwise { //(io.aluOp === 2.U)
     switch(io.f3) {
       is(0.U) {

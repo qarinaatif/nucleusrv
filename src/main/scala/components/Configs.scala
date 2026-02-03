@@ -7,7 +7,7 @@ case class Configs(
     C       : Boolean = false,
     A       : Boolean = false,
     Zicsr   : Boolean = false,
-    TRACE   : Boolean = false,
+    TRACE   : Boolean = true,
     HARTID  : Int     = 1,
     ARCHID  : Int     = 1
 )

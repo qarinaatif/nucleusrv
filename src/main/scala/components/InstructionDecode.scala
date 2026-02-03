@@ -3,12 +3,7 @@ package nucleusrv.components
 import chisel3._
 import chisel3.util._
 
-class InstructionDecode(
-  F: Boolean,
-  Zicsr: Boolean,
-  TRACE: Boolean,
-  XLEN: Int
-) extends Module {
+class InstructionDecode(F: Boolean, Zicsr: Boolean, TRACE: Boolean, XLEN: Int) extends Module {
   val io = IO(new Bundle {
     val id_instruction = Input(UInt(32.W))
     val writeData = Input(UInt(XLEN.W))
@@ -43,7 +38,7 @@ class InstructionDecode(
     val ex_stall = Input(Bool())
 
     //Outputs
-    val immediate = Output(UInt(32.W))
+    val immediate = Output(UInt(XLEN.W))
     val writeRegAddress = Output(UInt(5.W))
     val readData1 = Output(UInt(XLEN.W))
     val readData2 = Output(UInt(XLEN.W))
@@ -213,8 +208,8 @@ class InstructionDecode(
   val registerRs1 = dontTouch(io.id_instruction(19, 15))
   val registerRs2 = io.id_instruction(24, 20)
   val registerRs3 = if (F) Some(io.id_instruction(31, 27)) else None
-  val readData1 = WireInit(0.U(UInt(XLEN.W)))
-  val readData2 = WireInit(0.U(UInt(XLEN.W)))
+  val readData1 = WireInit(0.U(XLEN.W))
+  val readData2 = WireInit(0.U(XLEN.W))
   val writeData = dontTouch(Mux(io.csr_Wb, io.csr_Wb_data, io.writeData))
   registers.io.readAddress(0) := registerRs1
   registers.io.readAddress(1) := registerRs2
@@ -320,7 +315,7 @@ class InstructionDecode(
   }
 
   //Branch Unit
-  val bu = Module(new BranchUnit)
+  val bu = Module(new BranchUnit(XLEN))
   bu.io.branch := io.ctl_branch
   bu.io.funct3 := io.id_instruction(14, 12)
   bu.io.rd1 := input1
@@ -373,7 +368,7 @@ class InstructionDecode(
   when(
     (io.id_instruction(6,0) === "b0110011".U) | (
       (io.id_instruction(6,0) === "b0010011".U) & (io.func3 === 5.U)
-    ) | (io.id_instruction(6, 0) === "b1010011".U)
+    ) | (io.id_instruction(6, 0) === "b1010011".U) | (io.id_instruction(6, 0) === "b0111011".U)
   ){
     io.func7 := io.id_instruction(31,25)
   }.otherwise{

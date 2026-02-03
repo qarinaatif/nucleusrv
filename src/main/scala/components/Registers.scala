@@ -3,10 +3,7 @@ package nucleusrv.components
 import chisel3._
 import chisel3.util.MuxCase
 
-class Registers(
-  F: Boolean,
-  XLEN: Int
-  ) extends Module {
+class Registers( F: Boolean, XLEN: Int) extends Module {
   val io = IO(new Bundle {
     val readAddress = Input(Vec(if (F) 3 else 2, UInt(5.W)))
     val writeEnable = Input(Vec(if (F) 2 else 1, Bool()))
