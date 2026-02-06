@@ -369,3 +369,4 @@ riscof_work/
 .ammonite/
 metals.sbt
 mem_data/
+logs/

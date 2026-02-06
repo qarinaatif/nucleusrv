@@ -38,6 +38,7 @@ class InstructionDecode(
     val csr_Mem_data = Input(UInt(32.W))
     val csr_Wb_data = Input(UInt(32.W))
     val dmem_data = Input(UInt(32.W))
+    val instr_retired = Input(Bool())
 
     val ex_stall = Input(Bool())
 
@@ -73,7 +74,11 @@ class InstructionDecode(
     val csr_o_data          = if (Zicsr) Some(Output(UInt(32.W))) else None
     val is_csr              = if (Zicsr) Some(Output(Bool())) else None
     val fcsr_o_data         = if (Zicsr) Some(Output(UInt(32.W))) else None
-
+    val csr_o_mtvec         = if (Zicsr) Some(Output(UInt(32.W))) else None
+    val csr_o_mepc          = if (Zicsr) Some(Output(UInt(32.W))) else None
+    val csr_o_medeleg       = if (Zicsr) Some(Output(UInt(32.W))) else None
+    val csr_o_mideleg       = if (Zicsr) Some(Output(UInt(32.W))) else None
+    
     // F pins
     val f_read_reg = if (F) Some(Input(Vec(3, Vec(2, Bool())))) else None
     val f_except = if (F) Some(Input(Vec(3, Vec(5, Bool())))) else None
@@ -113,20 +118,6 @@ class InstructionDecode(
   io.aq    := atomicDecoder.io.out.aq
   io.rl    := atomicDecoder.io.out.rl
 
-  val is_f = if (F) Some(WireInit(0.B)) else None
-  if (F) {
-    is_f.get := Vector(
-      "b0000111",
-      "b0100111",
-      "b1000011",
-      "b1000111",
-      "b1001011",
-      "b1001111",
-      "b1010011"
-    ).map(io.id_instruction(6, 0) === _.U).reduce(_ || _)
-    io.is_f.get := is_f.get
-  }
-
   // CSR
   val csr = if (Zicsr) Some(Module(new CSR())) else None
   if (Zicsr) {
@@ -147,6 +138,25 @@ class InstructionDecode(
                                          ).reduce(_ | _))
                                        ))
     io.fcsr_o_data.get              := csr.get.io.fcsr_o_data
+    io.csr_o_mtvec.get              := csr.get.io.o_mtvec_val
+    io.csr_o_mepc.get               := csr.get.io.o_mepc_val
+    io.csr_o_medeleg.get            := csr.get.io.o_medeleg_val
+    io.csr_o_mideleg.get            := csr.get.io.o_mideleg_val
+  }
+
+  val is_f = if (F) Some(WireInit(0.B)) else None
+  if (F) {
+     val f_enabled = if (Zicsr) csr.get.io.o_misa_val(5) else true.B
+     is_f.get := Vector(
+      "b0000111",
+      "b0100111",
+      "b1000011",
+      "b1000111",
+      "b1001011",
+      "b1001111",
+      "b1010011"
+    ).map(io.id_instruction(6, 0) === _.U).reduce(_ || _) && f_enabled
+    io.is_f.get := is_f.get
   }
 
   val csrController = if (Zicsr) Some(Module(new CSRController())) else None

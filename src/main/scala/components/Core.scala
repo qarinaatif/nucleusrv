@@ -487,6 +487,7 @@ class Core(implicit val config:Configs) extends Module{
     val instruction_retired = WireInit(false.B)
     instruction_retired := mem_reg_ins =/= 0.U && !ID.ifid_flush && !(MEM.io.stall || io.stall) && (!mem_reg_ctl_memToReg === 1.U || io.dmemRsp.valid)
     ID.csr_i_instr_retired.get := instruction_retired
+    ID.instr_retired := instruction_retired
 
   /**************
   ** RVFI PINS **
