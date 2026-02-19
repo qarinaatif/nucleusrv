@@ -190,6 +190,10 @@ class MemoryFetch(TRACE: Boolean) extends Module {
         io.readData := DontCare
       }
     }
+    .elsewhen(funct3 === "b110".U) {
+      // load word unsigned (LWU)
+      io.readData := Cat(Fill(0, 0.U), rdata) // zero-extend 32 bits (no upper bits needed)
+    }
     .otherwise {
       io.readData := DontCare
     }

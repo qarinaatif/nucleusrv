@@ -2,9 +2,9 @@ package nucleusrv.components
 import chisel3._
 import chisel3.util.BitPat
 
-class JumpUnit extends Module {
+class JumpUnit(XLEN: Int) extends Module {
   val io = IO(new Bundle {
-    val func7: UInt = Input(UInt(32.W))
+    val func7: UInt = Input(UInt(XLEN.W))
     val jump: UInt = Output(UInt(2.W))
   })
 
