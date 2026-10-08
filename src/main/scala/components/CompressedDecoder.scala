@@ -82,6 +82,23 @@ class CompressedDecoder(XLEN: Int = 64) extends Module {
                               "b01".asUInt(2.W), instruction_i(9,7),"b010".asUInt(3.W), instruction_i(11, 10), instruction_i(6), "b00".asUInt(2.W), OPCODE_STORE)
         }
 
+        is ("b111".U) {
+          if (XLEN == 64) {
+            // c.sd -> sd rs2', imm(rs1') (RV64)
+            io.is_comp := true.B
+            io.instruction_o := Cat(Fill(4, "b0".U), instruction_i(6, 5), instruction_i(12),
+                                "b01".asUInt(2.W), instruction_i(4, 2),
+                                "b01".asUInt(2.W), instruction_i(9, 7),
+                                "b011".asUInt(3.W),
+                                instruction_i(11, 10), "b000".asUInt(3.W),
+                                OPCODE_STORE)
+          } else {
+            // RV32: c.fsw (floating-point store) or illegal if no F
+            io.is_comp := false.B
+            io.instruction_o := instruction_i
+          }
+        }
+
         is ("b100".U) {
           // illegal instruction
           io.is_comp := false.B
@@ -233,6 +250,11 @@ class CompressedDecoder(XLEN: Int = 64) extends Module {
                     // c.subw -> subw rd', rd', rs2' (RV64)
                     io.is_comp := true.B
                     io.instruction_o := Cat("b0100000".asUInt(7.W), "b01".asUInt(2.W), instruction_i(4,2), "b01".asUInt(2.W),
+                                        instruction_i(9,7), "b000".asUInt(3.W), "b01".asUInt(2.W), instruction_i(9,7), OPCODE_OP_32)
+                  }.elsewhen(instruction_i(6,5) === "b01".U) {
+                    // c.addw -> addw rd', rd', rs2' (RV64)
+                    io.is_comp := true.B
+                    io.instruction_o := Cat("b0000000".asUInt(7.W), "b01".asUInt(2.W), instruction_i(4,2), "b01".asUInt(2.W),
                                         instruction_i(9,7), "b000".asUInt(3.W), "b01".asUInt(2.W), instruction_i(9,7), OPCODE_OP_32)
                   }
                 }
