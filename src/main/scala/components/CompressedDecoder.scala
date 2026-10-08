@@ -69,7 +69,6 @@ class CompressedDecoder(XLEN: Int = 64) extends Module {
             io.instruction_o := Cat(Fill(4,"b0".U), instruction_i(6, 5), instruction_i(12, 10), "b000".asUInt(3.W),
                                 "b01".asUInt(2.W), instruction_i(9, 7), "b011".asUInt(3.W), "b01".asUInt(2.W), instruction_i(4, 2), OPCODE_LOAD)
           } else {
-            // RV32: c.flw (floating-point load) or illegal if no F
             io.is_comp := false.B
             io.instruction_o := instruction_i
           }
@@ -93,7 +92,6 @@ class CompressedDecoder(XLEN: Int = 64) extends Module {
                                 instruction_i(11, 10), "b000".asUInt(3.W),
                                 OPCODE_STORE)
           } else {
-            // RV32: c.fsw (floating-point store) or illegal if no F
             io.is_comp := false.B
             io.instruction_o := instruction_i
           }
@@ -118,7 +116,6 @@ class CompressedDecoder(XLEN: Int = 64) extends Module {
 
         is ("b000".U) {
           // c.addi -> addi rd, rd, nzimm
-          // c.nop
           io.is_comp := true.B
           io.instruction_o := Cat(Fill(6,instruction_i(12)), instruction_i(12), instruction_i(6,2),
                               instruction_i(11,7),"b000".asUInt(3.W), instruction_i(11, 7), OPCODE_OP_IMM)
@@ -165,7 +162,6 @@ class CompressedDecoder(XLEN: Int = 64) extends Module {
         
         is ("b010".U) {
           // c.li -> addi rd, x0, nzimm
-          // (c.li hints are translated into an addi hint)
           io.is_comp := true.B
           io.instruction_o := Cat(Fill(6,instruction_i(12)), instruction_i(12), instruction_i(6,2), "b00000".asUInt(5.W),
                               "b000".asUInt(3.W), instruction_i(11,7), OPCODE_OP_IMM)          
@@ -264,19 +260,31 @@ class CompressedDecoder(XLEN: Int = 64) extends Module {
         }
 
         is ("b110".U) {
-          //c.beqz -> beq rs1', x0, imm
+          // c.beqz -> beq rs1', x0, imm
           io.is_comp := true.B
-          io.instruction_o := Cat(Fill(4,instruction_i(12)), instruction_i(6,5), instruction_i(2), Fill(5,"b0".U), "b01".asUInt(2.W),
-                              instruction_i(9,7), "b00".asUInt(2.W), instruction_i(13), instruction_i(11,10), instruction_i(4,3),
-                              instruction_i(12), OPCODE_BRANCH)
+          io.instruction_o := Cat(
+            Fill(4, instruction_i(12)), instruction_i(6, 5), instruction_i(2), 
+            "b00000".U(5.W),                                                   
+            "b01".asUInt(2.W), instruction_i(9, 7),                            
+            "b000".asUInt(3.W),                                                
+            instruction_i(11, 10), instruction_i(4, 3),                        
+            instruction_i(12),                                                 
+            OPCODE_BRANCH                                                      
+          )
         }
 
         is ("b111".U) {
-          //c.bnez -> bne rs1', x0, imm
+          // c.bnez -> bne rs1', x0, imm
           io.is_comp := true.B
-          io.instruction_o := Cat(Fill(4,instruction_i(12)), instruction_i(6,5), instruction_i(2), Fill(5,"b0".U), "b01".asUInt(2.W),
-                              instruction_i(9,7), "b00".asUInt(2.W), instruction_i(13), instruction_i(11,10), instruction_i(4,3),
-                              instruction_i(12), OPCODE_BRANCH)
+          io.instruction_o := Cat(
+            Fill(4, instruction_i(12)), instruction_i(6, 5), instruction_i(2), 
+            "b00000".U(5.W),                                                   
+            "b01".asUInt(2.W), instruction_i(9, 7),                            
+            "b001".asUInt(3.W),                                                
+            instruction_i(11, 10), instruction_i(4, 3),                        
+            instruction_i(12),                                                 
+            OPCODE_BRANCH                                                      
+          )
         }
       }
     }
@@ -293,7 +301,6 @@ class CompressedDecoder(XLEN: Int = 64) extends Module {
 
         is ("b000".U) {
           // c.slli -> slli rd, rd, shamt
-          // (c.slli hints are translated into a slli hint)
           io.is_comp := true.B
           val shamt = if (XLEN == 64) Cat(instruction_i(12), instruction_i(6, 2)) else Cat(0.U(1.W), instruction_i(6, 2))
           io.instruction_o := Cat("b000000".asUInt(6.W), shamt, instruction_i(11, 7), "b001".asUInt(3.W),
@@ -314,7 +321,6 @@ class CompressedDecoder(XLEN: Int = 64) extends Module {
             io.instruction_o := Cat(Fill(3,"b0".U), instruction_i(4,2), instruction_i(12), instruction_i(6,5), "b000".asUInt(3.W), "h02".U(5.W),
                                 "b011".asUInt(3.W), instruction_i(11,7), OPCODE_LOAD)
           } else {
-            // RV32: c.flwsp (floating-point load from stack) or illegal if no F
             io.is_comp := false.B
             io.instruction_o := instruction_i
           }
@@ -327,7 +333,6 @@ class CompressedDecoder(XLEN: Int = 64) extends Module {
             when(instruction_i(6,2) =/= "b0".asUInt(5.W)) {
 
               // c.mv -> add rd/rs1, x0, rs2
-              // (c.mv hints are translated into an add hint)
               io.is_comp := true.B
               io.instruction_o := Cat(Fill(7,"b0".U), instruction_i(6,2),Fill(8,"b0".U), instruction_i(11,7), OPCODE_OP)
             } .otherwise {
@@ -340,7 +345,6 @@ class CompressedDecoder(XLEN: Int = 64) extends Module {
             
             when(instruction_i(6,2) =/= "b0".asUInt(5.W)) {
               // c.add -> add rd, rd, rs2
-              // (c.add hints are translated into an add hint)
               io.is_comp := true.B
               io.instruction_o := Cat(Fill(7,"b0".U), instruction_i(6,2), instruction_i(11,7), "b000".asUInt(3.W), instruction_i(11,7), OPCODE_OP)
             } .otherwise {
@@ -367,12 +371,10 @@ class CompressedDecoder(XLEN: Int = 64) extends Module {
 
         is ("b111".U) {
           if (XLEN == 64) {
-            // c.sdsp -> sd rs2, imm(x2) (RV64)
             io.is_comp := true.B
             io.instruction_o := Cat(Fill(3,"b0".U), instruction_i(9,7), instruction_i(12), instruction_i(6,2), "h02".asUInt(5.W), "b011".asUInt(3.W),
                                 instruction_i(11,10), "b000".asUInt(3.W), OPCODE_STORE)
           } else {
-            // RV32: c.fswsp (floating-point store to stack) or illegal if no F
             io.is_comp := false.B
             io.instruction_o := instruction_i
           }
